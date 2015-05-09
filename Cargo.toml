@@ -2,3 +2,14 @@
 name = "ofx"
 version = "0.1.0"
 authors = ["Tyler Southwick <tyler@northfuse.net>"]
+
+[[bin]]
+doc = false
+name = "foo"
+path = "src/main.rs"
+
+[dependencies]
+uuid = "*"
+xml-rs = "*"
+rustc-serialize = "*"
+hyper = "*"
