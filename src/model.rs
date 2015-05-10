@@ -1,6 +1,11 @@
 use rustc_serialize::*;
 
 #[derive(Debug, RustcEncodable)]
+pub struct OfxHolder {
+  pub OFX: OFX,
+}
+
+#[derive(Debug, RustcEncodable)]
 pub struct OFX {
   pub SIGNONMSGSRQV1 : SIGNONMSGSRQV1_T,
   pub ACCTINFOTRNRQ : ACCTINFOTRNRQ_T

@@ -10,7 +10,6 @@ use self::xml::name::Name;
 use self::rustc_serialize::Encodable;
 use self::rustc_serialize::Encoder;
 use std::{char, f64, io, str, string};
-use std::io::stdout;
 use std::io::Write;
 
 pub type EncodeResult<T> = Result<T, EncoderError>;
@@ -22,16 +21,15 @@ impl Clone for EncoderError {
     fn clone(&self) -> Self { *self }
 }
 
-pub fn write<T: Encodable>(object: &T) {
-    let mut s = String::new();
+pub fn write<T: Encodable, W : Write>(object: &T, write : W) -> Result<&str, &str> {
+    let mut encoder = XmlWriter::new(write);
     let result = {
-        let mut encoder = XmlWriter::new(stdout());
         object.encode(&mut encoder)
     };
     match result {
-            Ok(val) => println!("result: {:?}", val),
-            Err(err) => println!("error {:?}", err)
-        }
+        Ok(val) => Ok("success"),
+        Err(err) => Err("error")
+    }
 }
 
 macro_rules! write_element {
@@ -56,7 +54,8 @@ struct XmlWriter<W> {
 
 impl<W : Write> XmlWriter<W> {
     pub fn new(writer : W) -> XmlWriter<W> {
-        let mut eventWriter = EventWriter::new(writer);
+        let config = EmitterConfig::new().write_document_declaration(false);
+        let mut eventWriter = EventWriter::new_with_config(writer, config);
         XmlWriter {
             eventWriter : eventWriter
         }

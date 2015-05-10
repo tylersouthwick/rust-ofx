@@ -2,6 +2,10 @@ use uuid::Uuid;
 use std::io::*;
 use model::*;
 use xml::write;
+use hyper::Url;
+use hyper::client::*;
+use hyper::mime::{Mime, TopLevel, SubLevel};
+use hyper::header::*;
 
 pub struct FinancialInstitution<'a> {
     pub org : &'a str,
@@ -37,6 +41,38 @@ impl<'a> OfxClient<'a> {
         }
     }
 
+    fn make_request(&mut self, ofx : OFX) {
+        let url = match Url::parse(self.institution.url) {
+            Ok(url) => url,
+            Err(x) => panic!("Uh oh: {}", x),
+        };
+
+        let mut v = Vec::new();
+        v.write_all(b"<?xml version=\"1.0\" encoding=\"utf-8\" ?>");
+        v.write_all(b"<?OFX OFXHEADER=\"200\" VERSION=\"202\" SECURITY=\"NONE\" OLDFILEUID=\"NONE\" NEWFILEUID=\"7544ff99-69db-497c-b7f0-58561228dbeb\"?>");
+
+        let holder = OfxHolder {
+            OFX: ofx
+        };
+        write(&holder, &mut v);
+
+        let s = String::from_utf8(v).unwrap();
+        let bytes = s.as_bytes();
+
+        let mut client = Client::new();
+        fn mime() -> Mime {
+            "application/x-ofx".parse().unwrap()
+        }
+        let result = client.post(url)
+            .body(Body::BufBody(bytes, bytes.len()))
+            .header(ContentType(mime()))
+            .header(Accept(
+                    vec![QualityItem::new(mime(), Quality(1))]
+            ))
+            .send();
+        println!("result: {:?}", result);
+    }
+
     pub fn list_profiles(&mut self) {
         let ofx = OFX {
             SIGNONMSGSRQV1 : SIGNONMSGSRQV1_T {
@@ -61,6 +97,6 @@ impl<'a> OfxClient<'a> {
             }
         };
 
-        write(&ofx);
+        self.make_request(ofx);
     }
 }
