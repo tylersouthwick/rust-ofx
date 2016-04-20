@@ -70,7 +70,15 @@ impl<'a> OfxClient<'a> {
                     vec![QualityItem::new(mime(), Quality(1))]
             ))
             .send();
-        println!("result: {:?}", result);
+
+        let mut okResult = result.unwrap();
+
+        println!("result: {:?}", okResult);
+
+        let mut outV : Vec<u8> = vec![];
+        copy(&mut okResult, &mut outV);
+        let d = String::from_utf8(outV).unwrap();
+        println!("result: {:?}", d);
     }
 
     pub fn list_profiles(&mut self) {
